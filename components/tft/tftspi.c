@@ -14,6 +14,7 @@
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
 #include "soc/spi_reg.h"
+#include "driver/gpio.h"
 
 
 // ====================================================
@@ -23,6 +24,10 @@
 uint8_t gray_scale = 0;
 // Spi clock for reading data from display memory in Hz
 uint32_t max_rdclock = 8000000;
+
+int _xoffset = 53;
+int _yoffset = 40;
+
 
 // Default display dimensions
 int _width = DEFAULT_TFT_DISPLAY_WIDTH;
@@ -190,11 +195,20 @@ static void IRAM_ATTR disp_spi_transfer_addrwin(uint16_t x1, uint16_t x2, uint16
 
 	disp_spi->host->hw->cmd.usr = 1; // Start transfer
 
-	wd = (uint32_t)(x1>>8);
-	wd |= (uint32_t)(x1&0xff) << 8;
-	wd |= (uint32_t)(x2>>8) << 16;
-	wd |= (uint32_t)(x2&0xff) << 24;
-
+    if (_width < _height) 
+    {
+	wd = (uint32_t)((x1+_xoffset)>>8);
+	wd |= (uint32_t)((x1+_xoffset)&0xff) << 8;
+	wd |= (uint32_t)((x2+_xoffset)>>8) << 16;
+	wd |= (uint32_t)((x2+_xoffset)&0xff) << 24;
+    } else
+    {
+	wd = (uint32_t)((x1+_yoffset)>>8);
+	wd |= (uint32_t)((x1+_yoffset)&0xff) << 8;
+	wd |= (uint32_t)((x2+_yoffset)>>8) << 16;
+	wd |= (uint32_t)((x2+_yoffset)&0xff) << 24;        
+    }    
+        
 	while (disp_spi->host->hw->cmd.usr); // wait transfer end
 	gpio_set_level(PIN_NUM_DC, 1);
 	disp_spi->host->hw->data_buf[0] = wd;
@@ -207,11 +221,20 @@ static void IRAM_ATTR disp_spi_transfer_addrwin(uint16_t x1, uint16_t x2, uint16
 	disp_spi->host->hw->mosi_dlen.usr_mosi_dbitlen = 7;
 	disp_spi->host->hw->cmd.usr = 1; // Start transfer
 
-	wd = (uint32_t)(y1>>8);
-	wd |= (uint32_t)(y1&0xff) << 8;
-	wd |= (uint32_t)(y2>>8) << 16;
-	wd |= (uint32_t)(y2&0xff) << 24;
-
+ if (_width < _height) 
+    {
+	wd = (uint32_t)((y1+_yoffset)>>8);
+	wd |= (uint32_t)((y1+_yoffset)&0xff) << 8;
+	wd |= (uint32_t)((y2+_yoffset)>>8) << 16;
+	wd |= (uint32_t)((y2+_yoffset)&0xff) << 24;
+    } else
+    {
+	wd = (uint32_t)((y1+_xoffset)>>8);
+	wd |= (uint32_t)((y1+_xoffset)&0xff) << 8;
+	wd |= (uint32_t)((y2+_xoffset)>>8) << 16;
+	wd |= (uint32_t)((y2+_xoffset)&0xff) << 24;        
+    }    
+    
 	while (disp_spi->host->hw->cmd.usr);
 	gpio_set_level(PIN_NUM_DC, 1);
 
@@ -936,7 +959,7 @@ void TFT_display_init()
 	assert(ret==ESP_OK);
 
 	// Clear screen
-    _tft_setRotation(PORTRAIT);
+        _tft_setRotation(PORTRAIT);
 	TFT_pushColorRep(0, 0, _width-1, _height-1, (color_t){0,0,0}, (uint32_t)(_height*_width));
 
 	///Enable backlight
