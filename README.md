@@ -1,5 +1,5 @@
 CHANGES:
-The library defaults to the TTGO Esp32 development board with the OLED display. 136x240 and has a funky OFFSET or X and Y planes.  
+The library defaults to the TTGO Esp32 development board with the OLED display. 136x240 and has a funky OFFSET on X and Y planes.  
 
 
 
