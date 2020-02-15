@@ -1,3 +1,8 @@
+CHANGES:
+The library defaults to the TTGO Esp32 development board with the OLED display. 136x240 and has a funky OFFSET or X and Y planes.  
+
+
+
 
 ### TFT library for ESP32
 
